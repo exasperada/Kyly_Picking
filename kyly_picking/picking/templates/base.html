@@ -1,0 +1,96 @@
+{% load static %}
+{% load picking_extras %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}Kyly Picking{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="app-shell {% if user|has_group:'Gestor' %}role-manager{% else %}role-operator{% endif %}">
+    <nav class="topbar">
+        <a href="{% url 'dashboard' %}" class="brand">
+            <span class="brand-mark">KP</span>
+            <span>
+                <strong>Kyly Picking</strong>
+                <small>Logistica industrial</small>
+            </span>
+        </a>
+
+        <div class="topbar-user">
+            <div class="topbar-user-text">
+                <strong>{{ user.get_full_name|default:user.username }}</strong>
+                <small>{% if user|has_group:"Gestor" %}Gestor{% else %}Operador{% endif %}</small>
+            </div>
+            <a href="{% url 'logout' %}" class="btn btn-secondary mobile-logout">Logout</a>
+        </div>
+    </nav>
+
+    <div class="shell-layout">
+        {% if user|has_group:"Gestor" %}
+        <aside class="sidebar">
+            <div class="sidebar-user-card">
+                <div class="sidebar-user-name">{{ user.get_full_name|default:user.username }}</div>
+                <div class="sidebar-user-role">Gestor</div>
+                <a href="{% url 'logout' %}" class="btn btn-secondary btn-block sidebar-logout">Logout</a>
+            </div>
+
+            <div class="sidebar-title">Navegacao</div>
+            <a href="{% url 'dashboard' %}" class="sidebar-link {% if request.path == '/' or 'dashboard' in request.path %}active{% endif %}">
+                Dashboard
+            </a>
+            <a href="{% url 'historico_erros' %}" class="sidebar-link {% if 'historico/erros' in request.path %}active{% endif %}">
+                Erros
+            </a>
+            <a href="{% url 'historico_pedidos' %}" class="sidebar-link {% if 'historico/pedidos' in request.path %}active{% endif %}">
+                Pedidos
+            </a>
+        </aside>
+        {% endif %}
+
+        <main class="page-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    {% if user|has_group:"Gestor" %}
+    <nav class="bottom-nav">
+        <a href="{% url 'dashboard' %}" class="bottom-nav-link {% if request.path == '/' or 'dashboard' in request.path %}active{% endif %}">
+            <span>Dashboard</span>
+        </a>
+        <a href="{% url 'historico_pedidos' %}" class="bottom-nav-link {% if 'historico/pedidos' in request.path %}active{% endif %}">
+            <span>Pedidos</span>
+        </a>
+        <a href="{% url 'historico_erros' %}" class="bottom-nav-link {% if 'historico/erros' in request.path %}active{% endif %}">
+            <span>Erros</span>
+        </a>
+        <a href="{% url 'logout' %}" class="bottom-nav-link">
+            <span>Sair</span>
+        </a>
+    </nav>
+    {% else %}
+    <nav class="bottom-nav operator-bottom-nav">
+        <a href="{% url 'tela_picking' %}" class="bottom-nav-link {% if 'picking' in request.path or request.path == '/' %}active{% endif %}">
+            <span>Operacoes</span>
+        </a>
+        <a href="{% url 'historico_erros' %}" class="bottom-nav-link {% if 'historico/erros' in request.path %}active{% endif %}">
+            <span>Erros</span>
+        </a>
+        <a href="{% url 'historico_pedidos' %}" class="bottom-nav-link {% if 'historico/pedidos' in request.path %}active{% endif %}">
+            <span>Historico</span>
+        </a>
+        <a href="{% url 'logout' %}" class="bottom-nav-link">
+            <span>Sair</span>
+        </a>
+    </nav>
+    {% endif %}
+
+    <script src="{% static 'js/audio.js' %}"></script>
+    <script src="{% static 'js/scanner.js' %}"></script>
+    <script src="{% static 'js/picking.js' %}"></script>
+    <script src="{% static 'js/speech.js' %}"></script>
+    <script src="{% static 'js/dashboard.js' %}"></script>
+</body>
+</html>

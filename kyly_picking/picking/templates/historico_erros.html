@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Historico de Erros | Kyly Picking{% endblock %}
+
+{% block content %}
+<section class="mobile-shell">
+    <header class="screen-header">
+        <div class="screen-header-top">
+            <span class="eyebrow">Auditoria</span>
+            <span class="voice-badge">{{ total_erros }} registros</span>
+        </div>
+        <h1 class="screen-title">Historico de Erros</h1>
+        <p class="screen-subtitle">Feed operacional de ocorrencias, alertas de leitura e desvios de coleta.</p>
+    </header>
+
+    <section class="panel filter-panel">
+        <form method="get" class="filter-grid">
+            <div>
+                <label for="tipo" class="muted">Tipo de erro</label>
+                <select id="tipo" name="tipo" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="sku_invalida" {% if filtro_tipo == 'sku_invalida' %}selected{% endif %}>SKU invalida</option>
+                    <option value="quantidade_excessiva" {% if filtro_tipo == 'quantidade_excessiva' %}selected{% endif %}>Quantidade excessiva</option>
+                    <option value="produto_nao_encontrado" {% if filtro_tipo == 'produto_nao_encontrado' %}selected{% endif %}>Produto nao encontrado</option>
+                    <option value="localizacao_errada" {% if filtro_tipo == 'localizacao_errada' %}selected{% endif %}>Localizacao errada</option>
+                    <option value="item_falta" {% if filtro_tipo == 'item_falta' %}selected{% endif %}>Item em falta</option>
+                    <option value="dano" {% if filtro_tipo == 'dano' %}selected{% endif %}>Dano</option>
+                    <option value="outro" {% if filtro_tipo == 'outro' %}selected{% endif %}>Outro</option>
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-yellow">Aplicar</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="history-feed">
+        {% for erro in erros %}
+            <article class="history-card {% if erro.resolvido %}history-card-ok{% else %}history-card-alert{% endif %}">
+                <div class="history-card-top">
+                    <div>
+                        <span class="history-tag {% if erro.resolvido %}history-tag-ok{% else %}history-tag-alert{% endif %}">
+                            {{ erro.get_tipo_display }}
+                        </span>
+                        <h3>{{ erro.pedido.numero_pedido }}</h3>
+                    </div>
+                    <small>{{ erro.data_hora|date:"d/m H:i" }}</small>
+                </div>
+
+                <div class="history-meta-grid">
+                    <div class="history-meta-box">
+                        <span>Operador</span>
+                        <strong>{{ erro.usuario.get_full_name|default:erro.usuario.username }}</strong>
+                    </div>
+                    <div class="history-meta-box">
+                        <span>Produto</span>
+                        <strong>{% if erro.produto %}{{ erro.produto.sku }}{% else %}-{% endif %}</strong>
+                    </div>
+                </div>
+
+                <div class="history-description">
+                    {{ erro.descricao }}
+                </div>
+
+                <div class="history-footer">
+                    {% if erro.resolvido %}
+                        <span class="badge badge-success">Resolvido</span>
+                    {% else %}
+                        <span class="badge badge-danger">Aberto</span>
+                    {% endif %}
+                    {% if erro.resolucao %}
+                        <small>{{ erro.resolucao }}</small>
+                    {% endif %}
+                </div>
+            </article>
+        {% empty %}
+            <section class="panel empty-history">
+                <span class="eyebrow">Sem registros</span>
+                <h2>Nenhum erro encontrado</h2>
+                <p class="muted">Os filtros atuais nao retornaram ocorrencias.</p>
+            </section>
+        {% endfor %}
+    </section>
+
+    {% if total_paginas > 1 %}
+        <div class="pagination">
+            {% for p in page_numbers %}
+                {% if p == pagina_atual %}
+                    <span class="current">{{ p }}</span>
+                {% else %}
+                    <a href="?pagina={{ p }}{% if filtro_tipo %}&tipo={{ filtro_tipo }}{% endif %}">{{ p }}</a>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

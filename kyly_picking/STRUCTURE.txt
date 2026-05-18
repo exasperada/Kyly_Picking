@@ -1,0 +1,28 @@
+KYLY PICKING - ESTRUTURA RESUMIDA
+
+kyly_picking/
+|-- manage.py
+|-- db.sqlite3
+|-- .env.example
+|-- manage_commands.py
+|-- README.md
+|-- QUICK_START.md
+|-- kyly_picking/
+|   |-- settings.py
+|   |-- urls.py
+|   |-- asgi.py
+|   `-- wsgi.py
+`-- picking/
+    |-- models.py
+    |-- services.py
+    |-- views.py
+    |-- urls.py
+    |-- admin.py
+    |-- fixtures.py
+    |-- forms.py
+    |-- management/commands/seed_demo.py
+    |-- migrations/0001_initial.py
+    |-- templates/
+    |-- static/
+    |-- templatetags/
+    `-- tests/

@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Historico de Pedidos | Kyly Picking{% endblock %}
+
+{% block content %}
+<section class="mobile-shell">
+    <header class="screen-header">
+        <div class="screen-header-top">
+            <span class="eyebrow">Historico</span>
+            <span class="voice-badge">{{ total_pedidos }} pedidos</span>
+        </div>
+        <h1 class="screen-title">Historico de Pedidos</h1>
+        <p class="screen-subtitle">Acompanhe caixas concluidas, pedidos em picking e fila pendente no mesmo padrao do coletor.</p>
+    </header>
+
+    <section class="panel filter-panel">
+        <form method="get" class="filter-grid">
+            <div>
+                <label for="status" class="muted">Status do pedido</label>
+                <select id="status" name="status" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="pendente" {% if filtro_status == 'pendente' %}selected{% endif %}>Pendente</option>
+                    <option value="em_picking" {% if filtro_status == 'em_picking' %}selected{% endif %}>Em picking</option>
+                    <option value="concluido" {% if filtro_status == 'concluido' %}selected{% endif %}>Concluido</option>
+                    <option value="cancelado" {% if filtro_status == 'cancelado' %}selected{% endif %}>Cancelado</option>
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-yellow">Aplicar</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="history-feed">
+        {% for pedido in pedidos %}
+            <article class="history-card order-history-card">
+                <div class="history-card-top">
+                    <div>
+                        {% if pedido.status == 'concluido' %}
+                            <span class="history-tag history-tag-ok">{{ pedido.get_status_display }}</span>
+                        {% elif pedido.status == 'cancelado' %}
+                            <span class="history-tag history-tag-alert">{{ pedido.get_status_display }}</span>
+                        {% else %}
+                            <span class="history-tag history-tag-warn">{{ pedido.get_status_display }}</span>
+                        {% endif %}
+                        <h3>{{ pedido.numero_pedido }}</h3>
+                    </div>
+                    <small>{{ pedido.data_criacao|date:"d/m H:i" }}</small>
+                </div>
+
+                <div class="history-meta-grid">
+                    <div class="history-meta-box">
+                        <span>Itens</span>
+                        <strong>{{ pedido.itens.count }}</strong>
+                    </div>
+                    <div class="history-meta-box">
+                        <span>Conclusao</span>
+                        <strong>{% if pedido.data_conclusao %}{{ pedido.data_conclusao|date:"d/m H:i" }}{% else %}-{% endif %}</strong>
+                    </div>
+                </div>
+
+                <div class="order-progress-block">
+                    <div class="progress-row-meta">
+                        <span>Progresso</span>
+                        <strong>{{ pedido.percentual_progresso }}%</strong>
+                    </div>
+                    <div class="progress industrial-progress"><span style="width: {{ pedido.percentual_progresso }}%"></span></div>
+                </div>
+
+                <div class="order-items-stack">
+                    {% for item in pedido.itens.all %}
+                        <div class="order-item-row">
+                            <div>
+                                <strong>{{ item.produto.sku }}</strong>
+                                <div class="muted">{{ item.produto.nome }}</div>
+                            </div>
+                            <div class="order-item-side">
+                                <strong>{{ item.quantidade_coletada }}/{{ item.quantidade }}</strong>
+                                <small>{{ item.get_status_display }}</small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </article>
+        {% empty %}
+            <section class="panel empty-history">
+                <span class="eyebrow">Sem registros</span>
+                <h2>Nenhum pedido encontrado</h2>
+                <p class="muted">Os filtros atuais nao retornaram pedidos.</p>
+            </section>
+        {% endfor %}
+    </section>
+
+    {% if total_paginas > 1 %}
+        <div class="pagination">
+            {% for p in page_numbers %}
+                {% if p == pagina_atual %}
+                    <span class="current">{{ p }}</span>
+                {% else %}
+                    <a href="?pagina={{ p }}{% if filtro_status %}&status={{ filtro_status }}{% endif %}">{{ p }}</a>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

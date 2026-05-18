@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}Picking | Kyly Picking{% endblock %}
+
+{% block content %}
+<section class="mobile-shell">
+    <header class="screen-header">
+        <div class="screen-header-top">
+            <span class="eyebrow">Picking em curso</span>
+            {% if pedido %}<span class="order-chip">{{ pedido.numero_pedido }}</span>{% endif %}
+        </div>
+        <h1 class="screen-title">Operacao de Picking</h1>
+        <p class="screen-subtitle">Selecione o pedido, siga a localizacao, escaneie o codigo e confirme a coleta.</p>
+    </header>
+
+    <div class="operation-progress-card">
+        <div class="progress-row-meta">
+            <span>{{ pedido.numero_pedido|default:"Sem pedido" }}</span>
+            <strong>{{ progresso }}%</strong>
+        </div>
+        <div class="progress industrial-progress"><span style="width: {{ progresso }}%"></span></div>
+        <div class="progress-row-foot">
+            <small>Distancia estimada {{ distancia_estimada }} m</small>
+            <small>{% if item_atual %}Item {{ item_atual.id }}{% else %}Aguardando{% endif %}</small>
+        </div>
+    </div>
+
+    <div class="grid mobile-stack">
+        <section class="operator-main-card panel">
+            {% if item_atual %}
+                <div id="picking-app"
+                     data-item-id="{{ item_atual.id }}"
+                     data-pedido-id="{{ pedido.id }}"
+                     data-sku="{{ item_atual.produto.sku }}"
+                     data-produto="{{ item_atual.produto.nome }}"
+                     data-quantidade="{{ item_atual.quantidade }}"
+                     data-coletada="{{ item_atual.quantidade_coletada }}"
+                     data-localizacao="{{ item_atual.localizacao.endereco_completo }}">
+                    <div class="status-row">
+                        <span class="badge badge-info">{{ item_atual.get_status_display }}</span>
+                        <span class="mini-order">{{ pedido.numero_pedido }} | {{ item_atual.produto.sku }}</span>
+                    </div>
+
+                    <div class="product-hero">
+                        <div class="product-eyebrow">Produto</div>
+                        <h2>{{ item_atual.produto.nome }}</h2>
+                        <p class="muted">SKU {{ item_atual.produto.sku }} | Cor {{ item_atual.produto.cor|default:"-" }} | Tamanho {{ item_atual.produto.tamanho|default:"-" }}</p>
+                    </div>
+
+                    <div class="collector-grid">
+                        <div class="metric-card location-highlight">
+                            <div class="metric-label">Localizacao</div>
+                            <div class="metric-value">{{ item_atual.localizacao.corredor }}.{{ item_atual.localizacao.secao }}</div>
+                            <div class="metric-sub">{{ item_atual.localizacao.nivel }}</div>
+                        </div>
+                        <div class="metric-card quantity-highlight">
+                            <div class="metric-label">Qtd.</div>
+                            <div class="metric-value"><span id="quantidade-status">{{ item_atual.quantidade_coletada }} / {{ item_atual.quantidade }}</span></div>
+                            <div class="metric-sub">UN</div>
+                        </div>
+                    </div>
+
+                    <div class="feedback" id="feedback"></div>
+
+                    <div class="scan-entry-card">
+                        <label for="sku-input" class="scan-entry-label">Escanear ou digitar SKU do item</label>
+                        <div class="scanner-camera-card">
+                            <div class="scanner-preview-frame">
+                                <video id="sku-scanner-video" class="scanner-video" autoplay muted playsinline></video>
+                                <div class="scanner-mask">
+                                    <span class="scanner-corner corner-top-left"></span>
+                                    <span class="scanner-corner corner-top-right"></span>
+                                    <span class="scanner-corner corner-bottom-left"></span>
+                                    <span class="scanner-corner corner-bottom-right"></span>
+                                    <span class="scanner-laser"></span>
+                                </div>
+                            </div>
+                            <div class="scanner-toolbar">
+                                <button id="btn-abrir-camera-sku" class="btn btn-secondary" type="button">Abrir camera</button>
+                                <button id="btn-fechar-camera-sku" class="btn btn-secondary" type="button" hidden>Fechar camera</button>
+                            </div>
+                            <div id="sku-scanner-status" class="scanner-status" data-state="neutral">
+                                Use a camera do coletor para ler o codigo de barras do item.
+                            </div>
+                        </div>
+                        <div class="scan-row">
+                            <input id="sku-input" class="form-control scan-input" type="text" placeholder="Ex.: SKU006">
+                            <button id="btn-validar" class="btn btn-yellow" type="button">Confirmar</button>
+                        </div>
+                    </div>
+
+                    <div class="collector-actions">
+                        <button id="btn-confirmar" class="btn btn-success" type="button">Confirmar item</button>
+                        <button id="btn-pular" class="btn btn-warning" type="button">Pular item</button>
+                        <button id="btn-erro" class="btn btn-danger" type="button">Relatar erro</button>
+                        <button id="btn-falta" class="btn btn-secondary danger-outline" type="button">Item em falta</button>
+                    </div>
+
+                    <div class="support-strip">
+                        <button id="btn-falar" class="support-action" type="button">Ler instrucao</button>
+                        <button id="btn-voice-control" class="support-action" type="button">Comando por voz</button>
+                        <button id="btn-pular-suporte" class="support-action" type="button">Pular item</button>
+                    </div>
+                </div>
+            {% else %}
+                <div class="empty-state-card">
+                    <span class="eyebrow">Aguardando operacao</span>
+                    <h2>Selecione um pedido</h2>
+                    <p class="muted">
+                        {% if picking_ativo %}
+                            O pedido atual nao possui mais itens em aberto.
+                        {% else %}
+                            Inicie um pedido abaixo para acessar o coletor.
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </section>
+
+        <aside class="operator-side">
+            <section class="panel side-card">
+                <div class="side-card-header">
+                    <h3>Pedidos disponiveis</h3>
+                    <span class="side-live">LIVE</span>
+                </div>
+                {% for pedido_disponivel in pedidos_disponiveis %}
+                    <div class="queue-card">
+                        <div class="queue-row">
+                            <strong>{{ pedido_disponivel.numero_pedido }}</strong>
+                            <span>{{ pedido_disponivel.itens.count }} itens</span>
+                        </div>
+                        <div class="queue-meta">{{ pedido_disponivel.get_status_display }}</div>
+                        <button class="btn btn-yellow btn-block btn-iniciar-picking" data-pedido="{{ pedido_disponivel.numero_pedido }}" type="button">
+                            Iniciar Picking
+                        </button>
+                    </div>
+                {% empty %}
+                    <p class="muted">Nenhum pedido aguardando inicio.</p>
+                {% endfor %}
+            </section>
+
+            <section class="panel side-card">
+                <div class="side-card-header">
+                    <h3>Proximos itens</h3>
+                    <span class="voice-badge">Rota</span>
+                </div>
+                {% if proximos_itens %}
+                    {% for item in proximos_itens %}
+                        <div class="queue-card compact">
+                            <div class="queue-row">
+                                <strong>{{ item.produto.sku }}</strong>
+                                <span>{{ item.quantidade }} un</span>
+                            </div>
+                            <div>{{ item.produto.nome }}</div>
+                            <div class="queue-meta">{{ item.localizacao.endereco_completo }}</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="muted">Sem fila complementar no momento.</p>
+                {% endif %}
+            </section>
+
+            <section class="panel voice-panel">
+                <div class="side-card-header">
+                    <h3>Suporte por voz</h3>
+                    <span class="voice-badge">Ativo</span>
+                </div>
+                <div class="voice-visualizer">
+                    <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                </div>
+                <p class="voice-copy">Use comandos como "confirmar", "pular", "erro" ou "falta".</p>
+            </section>
+        </aside>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Gestor | Kyly Picking{% endblock %}
+
+{% block content %}
+<section class="mobile-shell" data-dashboard>
+    <header class="screen-header">
+        <div class="screen-header-top">
+            <span class="eyebrow">Armazem central • Linha A</span>
+            <span class="side-live">Live</span>
+        </div>
+        <h1 class="screen-title">Gestao de Operacoes</h1>
+        <p class="screen-subtitle">Visao mobile do dashboard, produtividade por turno e ocorrencias em tempo real.</p>
+    </header>
+
+    <section class="manager-hero panel">
+        <div>
+            <div class="manager-hero-label">Supervisor ativo</div>
+            <div class="manager-hero-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+            <div class="manager-hero-meta">Hoje, 7d e 30d em uma unica leitura</div>
+        </div>
+        <div class="manager-live-dot"></div>
+    </section>
+
+    <section class="stats-grid compact-stats">
+        <article class="stat-card accent-green"><strong>Total de pedidos</strong><div class="stat-value" data-stat="total-pedidos">{{ stats.total_pedidos }}</div><small>operacoes registradas</small></article>
+        <article class="stat-card accent-yellow"><strong>Tempo medio</strong><div class="stat-value">{{ tempo_medio|floatformat:0 }}s</div><small>por picking</small></article>
+        <article class="stat-card accent-green"><strong>Taxa de acerto</strong><div class="stat-value">{{ taxa_conclusao_geral|floatformat:1 }}%</div><small>conclusao geral</small></article>
+        <article class="stat-card accent-red"><strong>Erros hoje</strong><div class="stat-value" data-stat="total-erros">{{ stats.total_erros }}</div><small>ocorrencias</small></article>
+    </section>
+
+    <div class="grid mobile-stack">
+        <section class="panel dashboard-panel">
+            <div class="side-card-header">
+                <h3>Analise</h3>
+                <span class="voice-badge">Hoje</span>
+            </div>
+
+            <div class="dashboard-mini-grid">
+                <div class="mini-kpi">
+                    <span>Pedidos concluidos</span>
+                    <strong data-stat="pedidos-concluidos">{{ stats.pedidos_concluidos }}</strong>
+                </div>
+                <div class="mini-kpi">
+                    <span>Em picking</span>
+                    <strong data-stat="pedidos-em-picking">{{ stats.pedidos_em_picking }}</strong>
+                </div>
+                <div class="mini-kpi">
+                    <span>Pendentes</span>
+                    <strong data-stat="pedidos-pendentes">{{ stats.pedidos_pendentes }}</strong>
+                </div>
+                <div class="mini-kpi">
+                    <span>Operadores</span>
+                    <strong data-stat="total-operadores">{{ stats.total_operadores }}</strong>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h4>Produtividade por turno</h4>
+                <canvas id="chart-pedidos-status" width="640" height="280"></canvas>
+            </div>
+        </section>
+
+        <section class="panel dashboard-panel">
+            <div class="side-card-header">
+                <h3>Erros por tipo</h3>
+                <span class="voice-badge">Radar</span>
+            </div>
+            <div class="chart-card">
+                <canvas id="chart-erros-tipo" width="640" height="280"></canvas>
+                <div style="display:none;">
+                    {% for erro in erros_tipo %}
+                        <span data-erro-tipo="{{ erro.tipo }}" data-erro-count="{{ erro.count }}"></span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="ranking-card">
+                <h4>Erros por operador</h4>
+                {% for erro in erros_operador %}
+                    <div class="ranking-row">
+                        <span>{{ erro.usuario__username }}</span>
+                        <div class="ranking-bar"><span style="width: {{ erro.count|add:'0' }}0%"></span></div>
+                        <strong>{{ erro.count }}</strong>
+                    </div>
+                {% empty %}
+                    <p class="muted">Nenhuma ocorrencia registrada.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+
+    <section class="panel dashboard-panel">
+        <div class="side-card-header">
+            <h3>Produtividade por operador</h3>
+            <span class="voice-badge">Turno</span>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Operador</th>
+                        <th>Pickings</th>
+                        <th>Concluidos</th>
+                        <th>Taxa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for op in produtividade %}
+                        <tr>
+                            <td>{{ op.usuario }}</td>
+                            <td>{{ op.total_picking }}</td>
+                            <td>{{ op.total_conclusoes }}</td>
+                            <td>
+                                <div class="progress industrial-progress"><span style="width: {{ op.taxa_conclusao }}%"></span></div>
+                                <small>{{ op.taxa_conclusao|floatformat:1 }}%</small>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4">Nenhum dado de produtividade disponivel.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="panel dashboard-panel">
+        <div class="side-card-header">
+            <h3>Ultimos erros registrados</h3>
+            <span class="voice-badge">Feed</span>
+        </div>
+        {% for erro in erros_recentes %}
+            <div class="feed-row {% if erro.resolvido %}feed-ok{% else %}feed-alert{% endif %}">
+                <div>
+                    <strong>{{ erro.get_tipo_display }}</strong>
+                    <div class="muted">{{ erro.usuario.get_full_name|default:erro.usuario.username }} • {{ erro.pedido.numero_pedido }}</div>
+                </div>
+                <small>{{ erro.data_hora|date:"H:i" }}</small>
+            </div>
+        {% empty %}
+            <p class="muted">Nenhum erro recente.</p>
+        {% endfor %}
+    </section>
+</section>
+{% endblock %}

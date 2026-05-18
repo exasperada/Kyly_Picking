@@ -1,0 +1,11 @@
+"""
+Apps configuration para a app Picking.
+"""
+
+from django.apps import AppConfig
+
+
+class PickingConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'picking'
+    verbose_name = 'Kyly Picking'
