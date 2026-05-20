@@ -570,7 +570,3 @@ fetch('/picking/validar-sku/', {
 ```
 
 ---
-
-**Última atualização**: 2024
-**Versão da API**: 1.0
-**Servidor**: Django 4.2.7

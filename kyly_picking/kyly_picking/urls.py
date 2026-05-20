@@ -1,13 +1,12 @@
 """
 URL Configuration for Kyly Picking project.
 """
-from django.conf import settings
 from django.contrib import admin
+from django.contrib.staticfiles.views import serve as staticfiles_serve
 from django.urls import include, path, re_path
-from django.views.static import serve
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    re_path(r"^static/(?P<path>.*)$", serve, {"document_root": settings.STATICFILES_DIRS[0]}),
+    re_path(r"^static/(?P<path>.*)$", staticfiles_serve, {"insecure": True}),
     path('', include('picking.urls')),
 ]

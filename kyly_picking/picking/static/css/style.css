@@ -579,18 +579,34 @@ textarea:focus {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+#btn-falta {
+    grid-column: 1 / -1;
+}
+
+.scan-confirm-button {
+    text-transform: uppercase;
+}
+
 .support-strip {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     margin-top: 1rem;
 }
 
 .support-action {
-    background: #1c2027;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 16px;
-    color: var(--text);
-    padding: 0.9rem 0.8rem;
-    min-height: 50px;
+    background: linear-gradient(180deg, #ffd81a, #d8b611);
+    border: 0;
+    border-radius: 18px;
+    color: #191400;
+    cursor: pointer;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    min-height: 52px;
+    padding: 0.95rem 1rem;
+}
+
+.support-action.is-listening {
+    background: linear-gradient(180deg, #2dd16f, #12914b);
+    color: #041209;
 }
 
 .feedback {
