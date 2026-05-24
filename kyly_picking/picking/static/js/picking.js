@@ -57,9 +57,7 @@ const PickingPage = {
         this.setupScanner();
 
         document.getElementById("btn-validar")?.addEventListener("click", () => this.validarSku());
-        document.getElementById("btn-confirmar")?.addEventListener("click", () => this.validarSku());
         document.getElementById("btn-pular")?.addEventListener("click", () => this.pularItem());
-        document.getElementById("btn-pular-suporte")?.addEventListener("click", () => this.pularItem());
         document.getElementById("btn-erro")?.addEventListener("click", () => this.reportarErro());
         document.getElementById("btn-falta")?.addEventListener("click", () => this.marcarFalta());
         document.getElementById("sku-input")?.addEventListener("keydown", (event) => {
