@@ -351,3 +351,65 @@ const PickingPage = {
 document.addEventListener("DOMContentLoaded", () => PickingPage.init());
 
 window.Utils = Utils;
+
+// Remove possíveis botões duplicados exibidos por erro de merge ou renderização
+// Mantém apenas a primeira ocorrência de cada label de botão visível.
+window.dedupeActionButtons = function dedupeActionButtons() {
+    try {
+        const priorityClasses = new Set(['scan-confirm-button','btn-success','btn-warning','btn-danger','support-action','btn-yellow','btn-secondary']);
+        const keepIds = new Set(['btn-validar','btn-pular','btn-erro','btn-falta','btn-falar','btn-voice-control']);
+
+        function normalizeLabel(s) {
+            return (s || '').replace(/[^\w]/g, '').toLowerCase();
+        }
+
+        const seen = new Map();
+        document.querySelectorAll('button').forEach((btn) => {
+            const raw = (btn.textContent || '').trim();
+            if (!raw) return;
+            const label = normalizeLabel(raw);
+
+            const hasPriority = Array.from(btn.classList).some(c => priorityClasses.has(c)) || keepIds.has(btn.id);
+
+            if (!seen.has(label)) {
+                seen.set(label, { btn, hasPriority });
+                return;
+            }
+
+            const entry = seen.get(label);
+
+            // If current has priority and stored doesn't, replace stored
+            if (hasPriority && !entry.hasPriority) {
+                try { entry.btn.remove(); } catch (e) {}
+                seen.set(label, { btn, hasPriority });
+                return;
+            }
+
+            // Otherwise, if stored has priority, remove current
+            if (entry.hasPriority && !hasPriority) {
+                try { btn.remove(); } catch (e) {}
+                return;
+            }
+
+            // If neither or both have same priority, keep first and remove current
+            try { btn.remove(); } catch (e) {}
+        });
+        // Remover explicitamente botão extra 'Confirmar item' (versão grande) se existir
+        document.querySelectorAll('button').forEach((btn) => {
+            const raw = (btn.textContent || '').trim();
+            if (!raw) return;
+            if (raw.replace(/\s+/g, '').toLowerCase() === 'confirmaritem') {
+                // manter se for o botão menor com id conhecido
+                if (btn.id && btn.id === 'btn-validar') return;
+                try { btn.remove(); } catch (e) {}
+            }
+        });
+    } catch (e) {
+        console.warn('dedupeActionButtons failed', e);
+    }
+};
+
+// executar logo após a inicialização para limpar duplicados vindos do servidor/cached HTML
+window.addEventListener('load', () => {
+    window.dedupeActionButtons();
+});
